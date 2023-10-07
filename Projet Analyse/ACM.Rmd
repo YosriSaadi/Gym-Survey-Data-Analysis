@@ -1,0 +1,75 @@
+---
+title: "ACM"
+output: html_document
+date: "2022-12-25"
+---
+L'Analyse des Correspondances Multiples (ACM) est une méthode qui permet d'étudier l'association entre au moins deux variables qualitatives.
+
+
+```{r}
+library(readxl)#pour lire le fichier excel
+library(corrplot) #pour faire la matrice de corrélation
+library(RColorBrewer) #pour les couleurs
+library(factoextra)#qui permet de mettre joliment en forme des résultats d'ACP
+library(FactoMineR)#qui permet de mettre en oeuvre des méthodes analyses de données 
+library("xlsx")
+data <- read.xlsx('C:/Users/21656/Documents/Salle_de_sport.xlsx',1)  # read the data contains in Sheet1
+head(data)
+```
+```{r}
+summary(data)
+```
+#1.Exécution de l’Analyse des Correspondances Multiples :
+
+```{r}
+data.active <-data[,2:11]
+res.mca <- MCA (data.active, graph = TRUE)
+```
+#2. Calcul le taux d’inertie cumulé des 2 premiers axes de cette ACM:
+```{r}
+res.mca$eig
+```
+
+```{r}
+fviz_screeplot(res.mca)
+```
+#4. Interprétation de la première carte des modalités:
+```{r}
+#Représentation de la première carte des modalités
+fviz_mca_var (res.mca,
+              repel = TRUE, 
+              ggtheme = theme_minimal ())
+```
+il faut identifier les groupes de modalités qui sont proches dans la carte. On a un premier groupe de modalités à droit constitué des modalités Employé , Cyclisme, Athlétisme,Sentir en forme, entre 30ans et 50ans et dont l’interprétation est la suivante : les employés qui est de 30ans à 50ans exercent des activités qui fonctionnent le système cardiovasculaire et augmentent ainsi le rythme cardiaque et respiration.
+
+```{r}
+# Sélectionner et visualiser les modalités avec cos2 >= 0.4
+fviz_mca_var(res.mca, select.var = list(cos2 = 0.4))
+```
+```{r}
+dimdesc(res.mca, axes=1:2, proba=0.05)
+```
+#5. Interprétation de la première carte des individus:
+```{r}
+#Représentation de la première carte des individus
+fviz_mca_ind (res.mca,
+              repel = TRUE, 
+              ggtheme = theme_minimal ())
+```
+
+```{r}
+# Top 30 des individus les plus contributifs
+fviz_mca_biplot(res.mca,
+               select.ind = list(contrib = 30),
+               invisible ="var",repel = TRUE, 
+              ggtheme = theme_minimal ())
+```
+```{r}
+# Contrôler la couleur des individus selon le cos2
+fviz_mca_biplot(res.mca,
+               col.ind="cos2",
+               invisible ="var",repel = TRUE, 
+              ggtheme = theme_minimal ())
+```
+
+

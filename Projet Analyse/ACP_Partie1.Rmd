@@ -1,0 +1,184 @@
+---
+title: "ACP1"
+output: html_document
+date: "2022-12-24"
+---
+
+L'analyse en composantes principales(ACP): est l'une des méthodes d'analyse de données multivariées les plus fréquemment utilisées. Elle permet d'étudier des ensembles de données multidimensionnelles avec des variables quantitatives. Elle est largement utilisée en biostatistique, en marketing, en sociologie et dans de nombreux autres domaines.
+
+l'objectif de l'ACP:
+L’ACP permet de décrire un jeu de données, de le résumer, d’en réduire la dimensionnalité.
+
+Etapes de l'ACP:
+1.L'intérêt de l'ACP
+
+2.Pertinence de l'ACP
+
+3.Choix du nombre d’axes à retenir
+
+4.Interprétation de la carte des variables
+
+5.Interprétation de la carte des individus
+
+l'objectifs de l'ACP à propos nos données est de :
+-Etude des individus : Y a-t-il des similarités entre les individus pour toutes les variables ? Peut-on opposer un groupe d’individus à un autre ?
+-Etude des variables : on étudie les liaisons linéaires entre les variables. Les objectifs sont de résumer la matrice des corrélations.
+-Lien entre les deux études : peut-on caractériser des groups d’individus par des variables ?
+
+#Importation et explorer les données:
+
+```{r}
+library(readxl)#pour lire le fichier excel
+library(corrplot) #pour faire la matrice de corrélation
+library(RColorBrewer) #pour les couleurs
+library(factoextra)#qui permet de mettre joliment en forme des résultats d'ACP
+library(FactoMineR)#qui permet de mettre en oeuvre des méthodes analyses de données
+```
+
+#1. Linteret de l'ACP
+```{r}
+#Lire les données:
+library("xlsx")
+data <- read.xlsx('C:/Users/21656/Documents/Salle_de_sport.xlsx',1)  # read the data contains in Sheet1
+head(data)
+```
+
+```{r}
+#dimension des individus et des varaibles:
+dim(data)
+```
+34 individus et 37 variables.
+
+
+
+```{r}
+#Pour voir les variables :
+names(data)
+```
+```{r}
+summary(data)
+
+```
+#2. Pertinence de l'ACP:
+
+
+```{r}
+X1 = as.matrix(data[,c(13:27)])
+#Matrice de corrélation:
+M1<-cor(X1)
+M1
+
+corrplot(M1, type="upper", order="hclust", 
+         col=brewer.pal(n=11, name="RdBu"))
+
+```
+Ce corrgram est pour étudier la corrélation entre les variables:
+il est clair qu’il existe des corrélations importantes entre des groupes de variables ce qui suggère la pertinence de cette ACP par exemple, on a Sport de Combat et Coaching Privé ,Bar et Resauration ect...
+
+
+#3. Choix du nombre d’axes à retenir
+
+```{r}
+res.pca=PCA(X1,graph = T)
+```
+
+Pour choisir le nombre d'axes à retenir , il ya Trois critères devront être utlisés : taux d’inertie cumulé, critère de Kaiser et critère du coude.
+
+
+```{r}
+#eig: est une matrice de trois colonnes contenants les valeurs propres de l’ACP(eigenvalue), la proportion de variance de chaque composante(percentage of variance) et les variance cumulées par les composantes principales(cumulative percentage of variance.
+
+head(res.pca$eig)
+```
+
+
+```{r}
+fviz_screeplot(res.pca, ncp=11)
+```
+
+Critère de kaiser : on remarque qu’il y 5 axes dont les valeurs propres sont supérieures à 1 donc on retient 5 axes d’après ce critère.
+
+Critère du taux d’inertie cumulée : On remarque que le taux d’inertie cumulé des 2 premiers axes est de 50.43% qui est un taux important compte tenu du fait que nous avons 15 variables.
+
+Critère du coude : On remarque que le coude se trouve au niveau du deuxième axe (voir la figure Scree plot), d’après ce critère, on devrait retenir les 2 premiers axes.
+
+=> En faisant une sorte de vote des 3 critères on devrait retenir les 2 premiers axes.
+
+
+#4. Interprétation de la carte des variables:
+
+```{r}
+names(res.pca$var)
+```
+cor :  la corrélations d’une variable avec la composante principale d’un axe
+coord: la coordonnée de cette variable sur cet axe
+Cos² : Cosinus carré des variables. Représente la qualité de représentation des variables sur le graphique de l'ACP
+contrib:contient les contributions (en pourcentage), des variables, aux composantes principales.
+
+Les coordonnées des variables:
+```{r}
+res.pca$var$coord
+```
+L’objet cos2 dans var est une matrice dont les lignes représentent le cos carrés de la variable
+```{r}
+res.pca$var$cos2
+```
+
+Les deux premières dimensions contiennent 50% de l’inertie totale (l’inertie est la variance totale du tableau de données).
+à partir de cette résultat , on peut conclure :
+pour le premier dimension , on peut mettre les variables : Cours.Privés,Bar , Coaching.Privé, Machines.de.cardio, Restauration dans un groupe homogene avec le nom d'"Premium"
+Pour le deuxieme axe : on a Poids.libre, Appareils.à.musculation, Sport.de.combat, Garderie , donc un groupe homogene avec le nom "Standard"
+
+
+```{r}
+fviz_pca_var(res.pca)
+```
+```{r}
+
+fviz_pca_var(res.pca, col.var="cos2") +
+  scale_color_gradient2(low="white", mid="blue", 
+                        high="red", midpoint=0.6) + 
+  theme_minimal()
+```
+
+#5. Interprétation de la carte des individus:
+```{r}
+fviz_pca_ind(res.pca,geom = "point",col.ind.sup = 'gray')
+```
+```{r}
+fviz_pca_ind(res.pca,geom = "text",col.ind.sup = 'gray')
+```
+
+...
+
+```{r}
+fviz_pca_ind(res.pca,geom = "text",col.ind="cos2")+
+scale_color_gradient2(low="blue", mid="white", 
+                      high="red", midpoint=0.5)
+```
+
+```{r}
+plot.PCA(res.pca, axes=c(1, 2), choix="ind", cex=0.7)
+```
+
+```{r}
+res.pca = PCA(X1, graph=F)
+plot(res.pca, choix="ind", cex=0.7)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
